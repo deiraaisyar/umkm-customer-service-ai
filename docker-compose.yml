@@ -2,7 +2,7 @@ services:
 
   # ── Telegram Bot ──────────────────────────────────────────────────────────────
   telegram-bot:
-    image: USERNAME/nappa-bot:latest   # ganti USERNAME dengan Docker Hub username kamu
+    image: deiraaisyar/nappa-bot:latest
     container_name: nappa-bot
     command: python3 -m bot.main
     env_file:
@@ -18,7 +18,7 @@ services:
 
   # ── Streamlit Dashboard ───────────────────────────────────────────────────────
   dashboard:
-    image: USERNAME/nappa-dashboard:latest   # ganti USERNAME dengan Docker Hub username kamu
+    image: deiraaisyar/nappa-dashboard:latest
     container_name: nappa-dashboard
     command: >
       streamlit run dashboard/app.py
