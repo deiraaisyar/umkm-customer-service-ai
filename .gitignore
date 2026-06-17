@@ -12,6 +12,5 @@ __pycache__/
 
 .env
 
-# Generated data (rebuilt automatically on boot)
-data/bot.db
-data/chroma/
+# Exclude runtime secrets and large media only
+data/images/

@@ -13,9 +13,7 @@ __pycache__/
 # Local secrets
 .env
 
-# Local database (will be generated fresh by setup_db.py on first run)
-data/bot.db
-data/chroma/
+
 
 # Editor and OS files
 .DS_Store

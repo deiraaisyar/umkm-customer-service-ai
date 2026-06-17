@@ -1,16 +1,14 @@
-version: '3.8'
-
 services:
 
   # ── Telegram Bot ──────────────────────────────────────────────────────────────
   telegram-bot:
-    build: .
+    image: USERNAME/nappa-bot:latest   # ganti USERNAME dengan Docker Hub username kamu
     container_name: nappa-bot
     command: python3 -m bot.main
     env_file:
       - .env
     volumes:
-      - app_data:/app/data          # shared SQLite DB + product images
+      - app_data:/app/data
     restart: always
     logging:
       driver: "json-file"
@@ -20,7 +18,7 @@ services:
 
   # ── Streamlit Dashboard ───────────────────────────────────────────────────────
   dashboard:
-    build: .
+    image: USERNAME/nappa-dashboard:latest   # ganti USERNAME dengan Docker Hub username kamu
     container_name: nappa-dashboard
     command: >
       streamlit run dashboard/app.py
@@ -30,10 +28,12 @@ services:
     env_file:
       - .env
     volumes:
-      - app_data:/app/data          # same shared volume so dashboard reads live DB
+      - app_data:/app/data    # same volume — reads live DB written by bot
     ports:
       - "8501:8501"
     restart: always
+    depends_on:
+      - telegram-bot
     logging:
       driver: "json-file"
       options:
@@ -41,4 +41,4 @@ services:
         max-file: "3"
 
 volumes:
-  app_data:                         # named volume persists across restarts
+  app_data:                   # named volume — persists across restarts, initialized from image
