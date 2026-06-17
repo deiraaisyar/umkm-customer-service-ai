@@ -47,7 +47,9 @@ def search_by_text(query: str, n: int = 3) -> list:
 
 
 def search_by_image(image_path: str, n: int = 3) -> list:
-    img    = np.array(Image.open(image_path).convert("RGB"))
+    img    = Image.open(image_path).convert("RGB")
+
     vec    = _get_model().encode(img).tolist()
+    
     result = _get_collection().query(query_embeddings=[vec], n_results=n * 2)
     return _deduplicate(result["metadatas"][0], n)
