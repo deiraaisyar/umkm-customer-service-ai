@@ -1,9 +1,11 @@
+import os
 import numpy as np
 import chromadb
 from sentence_transformers import SentenceTransformer
 from PIL import Image
 
-CHROMA_PATH = "data/chroma"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+CHROMA_PATH = os.path.join(BASE_DIR, "data", "chroma")
 MODEL_NAME  = "clip-ViT-B-32"
 
 _model      = None

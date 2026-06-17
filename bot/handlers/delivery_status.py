@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 load_dotenv()
 genai.configure(api_key=os.getenv("GCP_API_KEY"))
 
-DB_PATH = "data/bot.db"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+DB_PATH = os.path.join(BASE_DIR, "data", "bot.db")
 
 OUT_OF_SCOPE_REPLY = (
     "I can only assist with questions about Nappa Milano products. "

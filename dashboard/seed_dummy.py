@@ -3,12 +3,14 @@ seed_dummy.py — Populate bot.db with dummy conversations, messages, and rating
 Run once from the project root: python dashboard/seed_dummy.py
 """
 
+import os
 import sqlite3
 import uuid
 import random
 from datetime import datetime, timedelta
 
-DB_PATH = "data/bot.db"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "data", "bot.db")
 
 USERS = [f"user_{100 + i}" for i in range(30)]
 

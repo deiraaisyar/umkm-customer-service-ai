@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+
+  # ── Telegram Bot ──────────────────────────────────────────────────────────────
+  telegram-bot:
+    build: .
+    container_name: nappa-bot
+    command: python3 -m bot.main
+    env_file:
+      - .env
+    volumes:
+      - app_data:/app/data          # shared SQLite DB + product images
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ── Streamlit Dashboard ───────────────────────────────────────────────────────
+  dashboard:
+    build: .
+    container_name: nappa-dashboard
+    command: >
+      streamlit run dashboard/app.py
+      --server.port 8501
+      --server.address 0.0.0.0
+      --server.headless true
+    env_file:
+      - .env
+    volumes:
+      - app_data:/app/data          # same shared volume so dashboard reads live DB
+    ports:
+      - "8501:8501"
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  app_data:                         # named volume persists across restarts

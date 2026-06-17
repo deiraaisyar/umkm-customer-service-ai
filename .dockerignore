@@ -1,0 +1,37 @@
+# Python virtual environment
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Git
+.git/
+.gitignore
+
+# Local secrets
+.env
+
+# Local database (will be generated fresh by setup_db.py on first run)
+data/bot.db
+data/chroma/
+
+# Editor and OS files
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Dev/scratch files
+catatan.txt
+fix_*.py
+test.py
+scraping/
+docs/
+
+# Docker itself
+Dockerfile
+docker-compose.yml
+.dockerignore

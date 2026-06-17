@@ -13,7 +13,9 @@ from collections import Counter
 from datetime import datetime
 
 # ── Config ─────────────────────────────────────────────────────────────────────
-DB_PATH = "data/bot.db"
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_PATH = os.path.join(BASE_DIR, "data", "bot.db")
 
 # Bilingual stopwords (Indonesian + English) for keyword extraction
 STOPWORDS = {
@@ -55,13 +57,28 @@ def load_data() -> dict:
         WHERE m.role = 'user'
     """, conn)
 
+    # Latency data — only assistant messages that have a recorded latency
+    try:
+        latency_df = pd.read_sql_query("""
+            SELECT m.sent_at, m.latency, m.intent_label
+            FROM messages m
+            WHERE m.role = 'assistant'
+              AND m.latency IS NOT NULL
+        """, conn)
+    except Exception:
+        latency_df = pd.DataFrame(columns=["sent_at", "latency", "intent_label"])
+
     conn.close()
 
     if not ratings.empty:
         ratings["rated_at"]   = pd.to_datetime(ratings["rated_at"])
         ratings["started_at"] = pd.to_datetime(ratings["started_at"])
 
-    return {"ratings": ratings, "messages": messages}
+    if not latency_df.empty:
+        latency_df["sent_at"] = pd.to_datetime(latency_df["sent_at"])
+        latency_df["date"]    = latency_df["sent_at"].dt.date
+
+    return {"ratings": ratings, "messages": messages, "latency": latency_df}
 
 
 def preprocess_keywords(texts: pd.Series) -> list[str]:
@@ -88,18 +105,57 @@ st.markdown("""
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-  html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
+  html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+    color: #1e293b;
+  }
+
+  /* Global variables for Streamlit theme overrides */
+  :root, .stApp {
+    --text-color: #1e293b !important;
+    --secondary-text-color: #475569 !important;
+    --background-color: #f1f5f9 !important;
+  }
+
+  /* Main app dark text */
+  .stApp p, .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5, .stApp h6, .stApp li, .stApp label, .stApp strong {
+    color: #1e293b !important;
+  }
+  .stApp span, .stApp div {
+    color: #1e293b; /* No !important to respect custom inline styles */
+  }
+
+  /* Sidebar dark text */
+  [data-testid="stSidebar"] p, [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2,
+  [data-testid="stSidebar"] h3, [data-testid="stSidebar"] h4, [data-testid="stSidebar"] h5,
+  [data-testid="stSidebar"] h6, [data-testid="stSidebar"] li, [data-testid="stSidebar"] label,
+  [data-testid="stSidebar"] strong {
+    color: #1e293b !important;
+  }
+  [data-testid="stSidebar"] span, [data-testid="stSidebar"] div {
+    color: #1e293b; /* No !important to respect custom inline styles */
+  }
+
+  /* Captions */
+  .stApp [data-testid="stCaptionContainer"] {
+    color: #475569 !important;
+  }
 
   /* Metric cards */
   [data-testid="metric-container"] {
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 14px;
-    padding: 20px 24px;
+    padding: 16px 12px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
-  [data-testid="stMetricValue"] { color: #1e293b; font-weight: 700; }
-  [data-testid="stMetricLabel"] { color: #64748b; font-size: 0.78rem; }
+  [data-testid="stMetricValue"] {
+    color: #1e293b !important;
+    font-weight: 700;
+    font-size: 1.45rem !important;
+    white-space: nowrap !important;
+  }
+  [data-testid="stMetricLabel"] { color: #475569 !important; font-size: 0.78rem; }
 
   /* Sidebar */
   [data-testid="stSidebar"] {
@@ -114,7 +170,7 @@ st.markdown("""
   .section-header {
     font-size: 1.05rem;
     font-weight: 600;
-    color: #4f46e5;
+    color: #4f46e5 !important;
     margin-top: 1.5rem;
     margin-bottom: 0.4rem;
     letter-spacing: 0.03em;
@@ -130,7 +186,7 @@ st.markdown("""
   .kw-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 0.6rem; }
   .kw-pill {
     background: #ede9fe;
-    color: #4338ca;
+    color: #4338ca !important;
     font-size: 0.82rem;
     font-weight: 500;
     padding: 5px 14px;
@@ -138,14 +194,53 @@ st.markdown("""
     border: 1px solid #c4b5fd;
     white-space: nowrap;
   }
-  .kw-pill span { color: #7c3aed; font-weight: 700; margin-left: 6px; }
+  .kw-pill span { color: #7c3aed !important; font-weight: 700; margin-left: 6px; }
+
+  /* Streamlit Button (Refresh Now) Override */
+  [data-testid="stSidebar"] button {
+    background-color: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #000000 !important;
+    border-radius: 8px !important;
+    padding: 6px 16px !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
+  }
+  [data-testid="stSidebar"] button:hover {
+    background-color: #f1f5f9 !important;
+    border-color: #000000 !important;
+    color: #1e293b !important;
+  }
+  [data-testid="stSidebar"] button:active {
+    background-color: #e2e8f0 !important;
+    border-color: #000000 !important;
+    color: #1e293b !important;
+  }
+
+  /* Sentiment/Multiselect Box Override */
+  [data-testid="stSidebar"] [data-testid="stMultiSelect"] > div:first-child,
+  [data-testid="stSidebar"] div[data-baseweb="select"] {
+    background-color: #ffffff !important;
+    border: 1px solid #000000 !important;
+    border-radius: 8px !important;
+  }
+  
+  /* Multiselect text and selected tags */
+  [data-testid="stSidebar"] [data-testid="stMultiSelect"] span,
+  [data-testid="stSidebar"] [data-baseweb="select"] span,
+  [data-testid="stSidebar"] [data-baseweb="tag"] {
+    color: #1e293b !important;
+  }
+  
+  /* Make sure dropdown input text is dark */
+  [data-testid="stSidebar"] [data-testid="stMultiSelect"] input {
+    color: #1e293b !important;
+  }
 </style>
 """, unsafe_allow_html=True)
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Nappa_milano_logo.png/240px-Nappa_milano_logo.png",
-             width=140, use_container_width=False)
     st.markdown("## 👟 Nappa Milano")
     st.markdown("**Customer Satisfaction Dashboard**")
     st.markdown("---")
@@ -167,6 +262,7 @@ with st.sidebar:
 data    = load_data()
 ratings = data["ratings"].copy()
 msgs    = data["messages"].copy()
+latency_df = data["latency"].copy()
 
 if ratings.empty:
     st.warning("⚠️ No ratings data found. Run `python dashboard/seed_dummy.py` first.")
@@ -245,7 +341,7 @@ with col1:
         )],
         height=300,
     )
-    st.plotly_chart(fig_donut, use_container_width=True)
+    st.plotly_chart(fig_donut, width="stretch", theme=None)
 
 with col2:
     st.markdown('<p class="section-header">Rating Score Distribution</p>', unsafe_allow_html=True)
@@ -268,19 +364,19 @@ with col2:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="#1e293b",
-        margin=dict(t=20, b=20, l=0, r=0),
+        margin=dict(t=20, b=60, l=0, r=0),
         showlegend=False,
         coloraxis_showscale=False,
         xaxis=dict(
-            title="Rating Score",
+            title=dict(text="Rating Score", standoff=40),
             tickvals=[1, 2, 3, 4, 5],
             ticktext=["1 ⭐", "2 ⭐", "3 ⭐", "4 ⭐", "5 ⭐"],
             gridcolor="#e2e8f0",
         ),
-        yaxis=dict(title="Number of Ratings", gridcolor="#e2e8f0"),
+        yaxis=dict(title=dict(text="Number of Ratings", standoff=15), gridcolor="#e2e8f0"),
         height=300,
     )
-    st.plotly_chart(fig_bar, use_container_width=True)
+    st.plotly_chart(fig_bar, width="stretch", theme=None)
 
 st.markdown("---")
 
@@ -310,12 +406,12 @@ with col3:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="#1e293b",
-        margin=dict(t=20, b=20, l=0, r=0),
-        xaxis=dict(gridcolor="#e2e8f0"),
-        yaxis=dict(gridcolor="#e2e8f0", range=[0.5, 5.5]),
+        margin=dict(t=20, b=60, l=0, r=0),
+        xaxis=dict(title=dict(text="Date", standoff=40), gridcolor="#e2e8f0"),
+        yaxis=dict(title=dict(text="Avg Score", standoff=15), gridcolor="#e2e8f0", range=[0.5, 5.5]),
         height=280,
     )
-    st.plotly_chart(fig_line, use_container_width=True)
+    st.plotly_chart(fig_line, width="stretch", theme=None)
 
 with col4:
     st.markdown('<p class="section-header">Sentiment Trend Over Time</p>', unsafe_allow_html=True)
@@ -335,13 +431,13 @@ with col4:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="#1e293b",
-        margin=dict(t=20, b=20, l=0, r=0),
-        xaxis=dict(gridcolor="#e2e8f0"),
-        yaxis=dict(gridcolor="#e2e8f0", title="% Share"),
+        margin=dict(t=20, b=60, l=0, r=0),
+        xaxis=dict(title=dict(text="Date", standoff=40), gridcolor="#e2e8f0"),
+        yaxis=dict(title=dict(text="% Share", standoff=15), gridcolor="#e2e8f0"),
         legend=dict(title="Sentiment"),
         height=280,
     )
-    st.plotly_chart(fig_area, use_container_width=True)
+    st.plotly_chart(fig_area, width="stretch", theme=None)
 
 st.markdown("---")
 
@@ -374,14 +470,14 @@ with col5:
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             font_color="#1e293b",
-            margin=dict(t=10, b=10, l=0, r=40),
+            margin=dict(t=10, b=60, l=0, r=40),
             showlegend=False,
             coloraxis_showscale=False,
-            xaxis=dict(gridcolor="#e2e8f0", title="Frequency"),
+            xaxis=dict(title=dict(text="Frequency", standoff=40), gridcolor="#e2e8f0"),
             yaxis=dict(gridcolor="#e2e8f0", title=""),
             height=340,
         )
-        st.plotly_chart(fig_kw, use_container_width=True)
+        st.plotly_chart(fig_kw, width="stretch", theme=None)
 
         # Pill display
         pills_html = '<div class="kw-pills">'
@@ -432,14 +528,14 @@ with col6:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         font_color="#1e293b",
-        margin=dict(t=10, b=10, l=0, r=40),
+        margin=dict(t=10, b=60, l=0, r=40),
         showlegend=False,
         coloraxis_showscale=False,
-        xaxis=dict(gridcolor="#e2e8f0", title="Satisfaction Score (1–5)", range=[0, 5.5]),
-        yaxis=dict(gridcolor="#e2e8f0", title="User ID", autorange="reversed"),
+        xaxis=dict(title=dict(text="Satisfaction Score (1–5)", standoff=40), gridcolor="#e2e8f0", range=[0, 5.5]),
+        yaxis=dict(title=dict(text="User ID", standoff=15), gridcolor="#e2e8f0", autorange="reversed"),
         height=400,
     )
-    st.plotly_chart(fig_user, use_container_width=True)
+    st.plotly_chart(fig_user, width="stretch", theme=None)
 
 st.markdown("---")
 
@@ -484,7 +580,7 @@ with col7:
         legend=dict(font=dict(size=11)),
         height=300,
     )
-    st.plotly_chart(fig_bucket, use_container_width=True)
+    st.plotly_chart(fig_bucket, width="stretch", theme=None)
 
     # Bucket table
     for _, row in bucket_counts.iterrows():
@@ -519,6 +615,87 @@ with col8:
             f"</div>",
             unsafe_allow_html=True
         )
+
+st.markdown("---")
+
+# ── Row 5: Response Latency ───────────────────────────────────────────────────
+st.markdown('<p class="section-header">⚡ Response Latency</p>', unsafe_allow_html=True)
+
+if latency_df.empty:
+    st.info("No latency data yet. Data will appear here after the bot handles some conversations.")
+else:
+    avg_lat   = latency_df["latency"].mean()
+    p50_lat   = latency_df["latency"].median()
+    p95_lat   = latency_df["latency"].quantile(0.95)
+    fast_pct  = (latency_df["latency"] < 3.0).sum() / len(latency_df) * 100
+
+    lk1, lk2, lk3, lk4 = st.columns(4)
+    lk1.metric("⏱️ Avg Response Time",   f"{avg_lat:.2f}s")
+    lk2.metric("📊 Median (P50)",         f"{p50_lat:.2f}s")
+    lk3.metric("🔺 P95 Response Time",    f"{p95_lat:.2f}s")
+    lk4.metric("⚡ Replies < 3s",         f"{fast_pct:.1f}%")
+
+    col_lat1, col_lat2 = st.columns(2)
+
+    with col_lat1:
+        st.markdown('<p class="section-header">Avg Latency Over Time</p>', unsafe_allow_html=True)
+        daily_lat = latency_df.groupby("date")["latency"].mean().reset_index()
+        daily_lat.columns = ["Date", "Avg Latency (s)"]
+
+        fig_lat_line = px.line(
+            daily_lat, x="Date", y="Avg Latency (s)",
+            markers=True,
+            color_discrete_sequence=["#f59e0b"],
+        )
+        fig_lat_line.add_hline(
+            y=3.0, line_dash="dash", line_color="#f87171",
+            annotation_text="3s target",
+            annotation_font_color="#f87171",
+        )
+        fig_lat_line.update_traces(
+            line=dict(width=2.5),
+            marker=dict(size=7, color="#d97706", line=dict(color="#ffffff", width=1.5)),
+        )
+        fig_lat_line.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color="#1e293b",
+            margin=dict(t=20, b=60, l=0, r=0),
+            xaxis=dict(title=dict(text="Date", standoff=40), gridcolor="#e2e8f0"),
+            yaxis=dict(title=dict(text="Avg Latency (s)", standoff=15), gridcolor="#e2e8f0"),
+            height=280,
+        )
+        st.plotly_chart(fig_lat_line, width="stretch", theme=None)
+
+    with col_lat2:
+        st.markdown('<p class="section-header">Latency Distribution</p>', unsafe_allow_html=True)
+
+        fig_lat_hist = px.histogram(
+            latency_df, x="latency",
+            nbins=20,
+            color_discrete_sequence=["#818cf8"],
+        )
+        fig_lat_hist.add_vline(
+            x=avg_lat, line_dash="dash", line_color="#4f46e5",
+            annotation_text=f"Mean {avg_lat:.1f}s",
+            annotation_font_color="#4f46e5",
+        )
+        fig_lat_hist.add_vline(
+            x=p95_lat, line_dash="dot", line_color="#f87171",
+            annotation_text=f"P95 {p95_lat:.1f}s",
+            annotation_font_color="#f87171",
+        )
+        fig_lat_hist.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font_color="#1e293b",
+            margin=dict(t=20, b=60, l=0, r=0),
+            xaxis=dict(title=dict(text="Latency (s)", standoff=40), gridcolor="#e2e8f0"),
+            yaxis=dict(title=dict(text="Number of Replies", standoff=15), gridcolor="#e2e8f0"),
+            showlegend=False,
+            height=280,
+        )
+        st.plotly_chart(fig_lat_hist, width="stretch", theme=None)
 
 st.markdown("---")
 st.caption("Nappa Milano AI Customer Service · Internal Dashboard")

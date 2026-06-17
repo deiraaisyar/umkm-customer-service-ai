@@ -1,6 +1,7 @@
 import os
 import logging
 import tempfile
+import time
 from dotenv import load_dotenv
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -237,7 +238,7 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if state == State.PRODUCT_INFO:
         result = handle_product_info(text)
         await update.message.reply_text(result["text"], reply_markup=back_keyboard())
-        log_message(conv_id, "assistant", result["text"])
+        log_message(conv_id, "assistant", result["text"], latency=result.get("latency"))
         for img_path in result["images"]:
             try:
                 await update.message.reply_photo(open(img_path, "rb"))
@@ -245,14 +246,18 @@ async def text_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 logger.warning(f"Failed to send image {img_path}: {e}")
 
     elif state == State.PAYMENT:
+        t_start = time.perf_counter()
         result = handle_payment(text)
+        latency = time.perf_counter() - t_start
         await update.message.reply_text(result["text"], reply_markup=back_keyboard())
-        log_message(conv_id, "assistant", result["text"])
+        log_message(conv_id, "assistant", result["text"], latency=latency)
 
     elif state == State.DELIVERY:
+        t_start = time.perf_counter()
         result = handle_delivery(text)
+        latency = time.perf_counter() - t_start
         await update.message.reply_text(result["text"], reply_markup=back_keyboard())
-        log_message(conv_id, "assistant", result["text"])
+        log_message(conv_id, "assistant", result["text"], latency=latency)
         logger.info(f"[delivery] sql: {result.get('sql')}")
 
 
@@ -287,7 +292,7 @@ async def photo_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         result = handle_product_info(caption or "find a product similar to this", image_path=tmp_path)
         await update.message.reply_text(result["text"], reply_markup=back_keyboard())
-        log_message(conv_id, "assistant", result["text"])
+        log_message(conv_id, "assistant", result["text"], latency=result.get("latency"))
         for img_path in result["images"]:
             try:
                 await update.message.reply_photo(open(img_path, "rb"))

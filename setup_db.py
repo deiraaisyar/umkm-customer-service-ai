@@ -10,9 +10,10 @@ from sentence_transformers import SentenceTransformer
 from PIL import Image
 
 # ── CONFIG ─────────────────────────────────────────────────────────
-CSV_PATH    = "data/products.csv"
-CHROMA_PATH = "data/chroma"
-DB_PATH     = "data/bot.db"
+BASE_DIR    = os.path.dirname(os.path.abspath(__file__))
+CSV_PATH    = os.path.join(BASE_DIR, "data", "products.csv")
+CHROMA_PATH = os.path.join(BASE_DIR, "data", "chroma")
+DB_PATH     = os.path.join(BASE_DIR, "data", "bot.db")
 MODEL_NAME  = "clip-ViT-B-32"
 
 random.seed(42)
@@ -141,7 +142,8 @@ CREATE TABLE IF NOT EXISTS messages (
     role         TEXT NOT NULL,  -- user | assistant
     content      TEXT NOT NULL,
     intent_label TEXT,
-    sent_at      DATETIME NOT NULL
+    sent_at      DATETIME NOT NULL,
+    latency      REAL
 );
 
 CREATE TABLE IF NOT EXISTS ratings (
