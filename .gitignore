@@ -1,4 +1,7 @@
-.venv
+.venv/
+__pycache__/
+*.pyc
+*.pyo
 
 *catatan.txt
 *scraping
@@ -8,3 +11,7 @@
 *test*
 
 .env
+
+# Generated data (rebuilt automatically on boot)
+data/bot.db
+data/chroma/
