@@ -9,6 +9,7 @@ services:
       - .env
     volumes:
       - app_data:/app/data
+      - ./bot:/app/bot    
     restart: always
     logging:
       driver: "json-file"
