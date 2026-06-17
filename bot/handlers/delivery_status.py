@@ -128,7 +128,7 @@ def handle_delivery(user_message: str) -> dict:
 
     if sql == "UNSUPPORTED":
         return {
-            "text": "Maaf, saya hanya bisa membantu melacak status pesanan. Bisa sebutkan nama pemesan atau nomor HP yang digunakan saat order?",
+            "text": "Sorry, I can only help you track your order status. Could you provide the customer's name or phone number used during the order?",
             "sql":  None,
             "rows": []
         }
@@ -136,7 +136,7 @@ def handle_delivery(user_message: str) -> dict:
     forbidden = ["drop", "delete", "update", "insert", "alter", "truncate"]
     if any(word in sql.lower() for word in forbidden):
         return {
-            "text": "Maaf, terjadi kesalahan. Silakan coba lagi.",
+            "text": "Sorry, an error occurred. Please try again.",
             "sql":  sql,
             "rows": []
         }
@@ -145,7 +145,7 @@ def handle_delivery(user_message: str) -> dict:
         rows = _execute_sql(sql)
     except Exception as e:
         return {
-            "text": "Maaf, saya tidak bisa menemukan data pesanan kamu. Pastikan nama atau nomor HP sudah benar.",
+            "text": "Sorry, I couldn't find your order details. Please make sure the name or phone number is correct.",
             "sql":  sql,
             "rows": [],
             "error": str(e)

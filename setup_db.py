@@ -145,10 +145,12 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 
 CREATE TABLE IF NOT EXISTS ratings (
-    rating_id  TEXT PRIMARY KEY,
-    conv_id    TEXT NOT NULL REFERENCES conversations(conv_id),
-    score      INTEGER NOT NULL CHECK(score BETWEEN 1 AND 5),
-    rated_at   DATETIME NOT NULL
+    rating_id     TEXT PRIMARY KEY,
+    conv_id       TEXT NOT NULL REFERENCES conversations(conv_id),
+    score         INTEGER NOT NULL CHECK(score BETWEEN 1 AND 5),
+    feedback_text TEXT,
+    sentiment     TEXT,
+    rated_at      DATETIME NOT NULL
 );
 """
 

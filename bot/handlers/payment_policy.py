@@ -31,31 +31,31 @@ def _is_out_of_scope(text: str) -> bool:
     return not bool(_PAYMENT_KEYWORDS.search(text))
 
 PAYMENT_POLICY = """
-METODE PEMBAYARAN NAPPA MILANO:
+NAPPA MILANO PAYMENT METHODS:
 
-1. TRANSFER BANK
-   - BCA   : 1234567890 a.n. Nappa Milano Indonesia
-   - Mandiri: 0987654321 a.n. Nappa Milano Indonesia
-   - BNI   : 1122334455 a.n. Nappa Milano Indonesia
-   - BRI   : 5566778899 a.n. Nappa Milano Indonesia
+1. BANK TRANSFER
+   - BCA   : 1234567890 o.b.o. Nappa Milano Indonesia
+   - Mandiri: 0987654321 o.b.o. Nappa Milano Indonesia
+   - BNI   : 1122334455 o.b.o. Nappa Milano Indonesia
+   - BRI   : 5566778899 o.b.o. Nappa Milano Indonesia
 
 2. QRIS
-   - Scan QRIS yang tersedia di Shopee atau dikirim oleh CS
-   - Berlaku untuk semua e-wallet (GoPay, OVO, Dana, ShopeePay, dll)
+   - Scan the QRIS code available on Shopee or sent by CS
+   - Valid for all e-wallets (GoPay, OVO, Dana, ShopeePay, etc.)
 
-CARA PEMBAYARAN:
-   a. Pilih metode pembayaran yang diinginkan
-   b. Transfer sesuai total tagihan (nominal harus tepat)
-   c. Simpan bukti transfer / screenshot QRIS
-   d. Kirim bukti pembayaran ke CS via chat ini
-   e. Pesanan akan diproses setelah pembayaran dikonfirmasi (maks. 1x24 jam)
+PAYMENT STEPS:
+   a. Choose your preferred payment method
+   b. Transfer the exact amount of the total bill
+   c. Save the payment receipt / QRIS screenshot
+   d. Send the payment receipt to CS via this chat
+   e. Orders will be processed after payment is confirmed (max. 24 hours)
 
-KETENTUAN:
-   - Pembayaran harus dilakukan dalam 24 jam setelah order dibuat
-   - Order otomatis dibatalkan jika belum ada pembayaran setelah 24 jam
-   - Tidak menerima pembayaran COD (Cash on Delivery)
-   - Tidak menerima pembayaran melalui rekening selain yang tertera di atas
-   - Untuk pertanyaan lebih lanjut, hubungi CS di jam operasional (09.00–17.00 WIB)
+TERMS & CONDITIONS:
+   - Payment must be made within 24 hours after the order is created
+   - Orders are automatically cancelled if payment is not received within 24 hours
+   - COD (Cash on Delivery) is not supported
+   - Payments through accounts other than those listed above are not accepted
+   - For further inquiries, contact CS during operational hours (09:00–17:00 WIB)
 """
 
 model = genai.GenerativeModel(
