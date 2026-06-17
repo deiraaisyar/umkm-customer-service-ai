@@ -1,4 +1,6 @@
 .venv
 
-*.txt
+*catatan.txt
 *scraping
+
+*fix_*

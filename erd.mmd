@@ -1,0 +1,62 @@
+```mermaid
+erDiagram
+  ORDERS {
+    string order_id PK
+    string customer_name
+    string customer_phone
+    float total_price
+    string status
+    datetime ordered_at
+  }
+
+  ORDER_ITEMS {
+    string item_id PK
+    string order_id FK
+    string product_name
+    string size
+    int quantity
+    float unit_price
+  }
+
+  SHIPMENTS {
+    string shipment_id PK
+    string order_id FK
+    string courier
+    string tracking_number
+    string current_status
+    string origin_city
+    string dest_city
+    datetime shipped_at
+    datetime estimated_arrival
+    datetime delivered_at
+  }
+
+  CONVERSATIONS {
+    string conv_id PK
+    string user_id
+    datetime started_at
+    datetime ended_at
+    int message_count
+  }
+
+  MESSAGES {
+    string msg_id PK
+    string conv_id FK
+    string role
+    text content
+    string intent_label
+    datetime sent_at
+  }
+
+  RATINGS {
+    string rating_id PK
+    string conv_id FK
+    int score
+    datetime rated_at
+  }
+
+  ORDERS ||--o{ ORDER_ITEMS : "contains"
+  ORDERS ||--o{ SHIPMENTS : "has"
+  CONVERSATIONS ||--o{ MESSAGES : "contains"
+  CONVERSATIONS ||--o| RATINGS : "gets"
+```
