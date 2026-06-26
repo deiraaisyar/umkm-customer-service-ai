@@ -2,6 +2,10 @@
 
 An AI-powered customer service solution tailored for Small and Medium Enterprises (UMKMs). The system integrates a Telegram bot for automated customer interactions and a Streamlit dashboard for real-time analytics.
 
+## Demo
+
+[Watch Video Demo on Google Drive](https://drive.google.com/drive/folders/1nWqFcKYsf8AFRjgJt9zUN291mQiAqVcz?usp=sharing)
+
 ## Live Deployment
 *   **Telegram Bot**: [@NMCSDEMOBot](https://t.me/NMCSDEMOBot)
 *   **Analytics Dashboard**: [http://35.254.192.4:8501/](http://35.254.192.4:8501/)

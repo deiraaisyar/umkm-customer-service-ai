@@ -1,0 +1,39 @@
+graph TD
+    %% Eksternal Users & Services
+    User[User / Customer] -- "Chat & Send Images" --> TelegramApp[Telegram App]
+    Admin[Admin / Owner] -- "View Dashboard" --> WebBrowser[Web Browser]
+
+    %% Cloud Environment
+    subgraph GCP [Google Cloud Platform VM]
+        direction TB
+
+        subgraph Docker [Docker Compose Network]
+            direction LR
+
+            %% Services
+            Bot[Telegram Bot Service<br>Python / python-telegram-bot]
+            Dash[Analytics Dashboard<br>Streamlit / Plotly]
+
+            %% Shared Storage
+            subgraph Volumes [Shared Data Volume]
+                SQLite[(SQLite DB<br>Transactions & Logs)]
+                Chroma[(ChromaDB<br>Vector Search)]
+            end
+        end
+    end
+
+    %% External APIs
+    TelegramAPI[Telegram API]
+    GeminiAPI[Google Gemini API<br>LLM]
+
+    %% Connections
+    TelegramApp <--> TelegramAPI
+    TelegramAPI <--> Bot
+    
+    Bot <--> |"Prompt & Context"| GeminiAPI
+    
+    Bot --> |"Read/Write Data"| SQLite
+    Bot --> |"Text/Image Semantic Search"| Chroma
+    
+    WebBrowser --> |"HTTP Port 8501"| Dash
+    Dash --> |"Read Data for Analytics"| SQLite

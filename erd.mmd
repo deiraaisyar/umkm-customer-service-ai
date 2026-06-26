@@ -1,4 +1,3 @@
-```mermaid
 erDiagram
   ORDERS {
     string order_id PK
@@ -57,8 +56,7 @@ erDiagram
     datetime rated_at
   }
 
-  ORDERS ||--o{ ORDER_ITEMS : "contains"
-  ORDERS ||--o{ SHIPMENTS : "has"
-  CONVERSATIONS ||--o{ MESSAGES : "contains"
-  CONVERSATIONS ||--o| RATINGS : "gets"
-```
+  ORDERS ||--o{ ORDER_ITEMS : contains
+  ORDERS ||--o{ SHIPMENTS : has
+  CONVERSATIONS ||--o{ MESSAGES : contains
+  CONVERSATIONS ||--o| RATINGS : gets
